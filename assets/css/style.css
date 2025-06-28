@@ -953,3 +953,11 @@ max-width: inherit;
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* ... (весь ваш существующий CSS код) ... */
+
+/* Добавленный стиль для reCAPTCHA */
+.g-recaptcha-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}

